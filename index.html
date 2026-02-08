@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Grocery Store</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Main Landing Page -->
+    <div id="landing-page" class="page active">
+        <div class="landing-container">
+            <div class="landing-card">
+                <div class="logo">
+                    <div class="logo-icon">🛒</div>
+                    <h1>Online Grocery Store</h1>
+                    <p class="tagline">Fresh. Fast. Delivered.</p>
+                </div>
+                
+                <div class="landing-buttons">
+                    <button id="goto-login-main" class="btn btn-primary btn-large">
+                        <span class="btn-icon">🔐</span>
+                        Login
+                    </button>
+                    <button id="goto-register-main" class="btn btn-secondary btn-large">
+                        <span class="btn-icon">📝</span>
+                        Register
+                    </button>
+                    <button id="goto-forgot-main" class="btn btn-link">
+                        <span class="btn-icon">❓</span>
+                        Forgot Password?
+                    </button>
+                </div>
+
+                <div class="landing-features">
+                    <div class="feature">
+                        <span class="feature-icon">🥬</span>
+                        <span>Fresh Vegetables</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">🍎</span>
+                        <span>Juicy Fruits</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon">🛒</span>
+                        <span>Daily Groceries</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Page -->
+    <div id="registration-page" class="page">
+        <div class="container">
+            <div class="form-card">
+                <h1>Create Account</h1>
+                <form id="registration-form">
+                    <div class="form-group">
+                        <label for="reg-name">Full Name</label>
+                        <input type="text" id="reg-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-mobile">Mobile Number</label>
+                        <input type="tel" id="reg-mobile" pattern="[0-9]{10}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email">Email</label>
+                        <input type="email" id="reg-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" minlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-confirm-password">Confirm Password</label>
+                        <input type="password" id="reg-confirm-password" minlength="6" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Register</button>
+                    <p class="form-footer">
+                        Already have an account? <a href="#" id="goto-login">Login here</a><br>
+                        <a href="#" id="back-to-main-reg" class="back-link">← Back to Main</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Page -->
+    <div id="login-page" class="page">
+        <div class="container">
+            <div class="form-card">
+                <h1>Welcome Back</h1>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-mobile">Mobile Number</label>
+                        <input type="tel" id="login-mobile" pattern="[0-9]{10}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    <p class="form-footer">
+                        Don't have an account? <a href="#" id="goto-register">Register here</a><br>
+                        <a href="#" id="goto-forgot-login">Forgot Password?</a><br>
+                        <a href="#" id="back-to-main-login" class="back-link">← Back to Main</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Page -->
+    <div id="forgot-password-page" class="page">
+        <div class="container">
+            <div class="form-card">
+                <h1>Reset Password</h1>
+                <p class="form-description">Enter your mobile number and create a new password</p>
+                <form id="forgot-password-form">
+                    <div class="form-group">
+                        <label for="forgot-mobile">Mobile Number</label>
+                        <input type="tel" id="forgot-mobile" pattern="[0-9]{10}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="forgot-new-password">New Password</label>
+                        <input type="password" id="forgot-new-password" minlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="forgot-confirm-password">Confirm New Password</label>
+                        <input type="password" id="forgot-confirm-password" minlength="6" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Reset Password</button>
+                    <p class="form-footer">
+                        Remember your password? <a href="#" id="goto-login-forgot">Login here</a><br>
+                        <a href="#" id="back-to-main-forgot" class="back-link">← Back to Main</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Home Page -->
+    <div id="home-page" class="page">
+        <nav class="navbar">
+            <div class="nav-container">
+                <h2>Grocery Store</h2>
+                <div class="nav-right">
+                    <span id="user-name" class="user-name"></span>
+                    <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="container">
+            <h1 class="page-title">Choose Category</h1>
+            <div class="category-grid">
+                <div class="category-card" data-category="vegetables">
+                    <div class="category-icon">🥬</div>
+                    <h3>Vegetables</h3>
+                    <p>Fresh and organic vegetables</p>
+                </div>
+                <div class="category-card" data-category="fruits">
+                    <div class="category-icon">🍎</div>
+                    <h3>Fruits</h3>
+                    <p>Juicy and sweet fruits</p>
+                </div>
+                <div class="category-card" data-category="groceries">
+                    <div class="category-icon">🛒</div>
+                    <h3>Groceries</h3>
+                    <p>Daily essential items</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product List Page -->
+    <div id="product-page" class="page">
+        <nav class="navbar">
+            <div class="nav-container">
+                <button id="back-btn" class="btn btn-secondary">← Back</button>
+                <h2 id="category-title">Products</h2>
+                <button id="logout-btn-2" class="btn btn-secondary">Logout</button>
+            </div>
+        </nav>
+        
+        <div class="container">
+            <div id="product-grid" class="product-grid"></div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
