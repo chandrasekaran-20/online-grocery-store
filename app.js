@@ -38,6 +38,7 @@ class Database {
         this.usersKey = 'grocery_users';
         this.loginHistoryKey = 'login_history';
         this.currentUserKey = 'current_user';
+        this.userProductsKey = 'user_products';
     }
 
     // Get all users
@@ -126,6 +127,60 @@ class Database {
     logout() {
         localStorage.removeItem(this.currentUserKey);
     }
+
+    // User Products Management
+    getUserProducts(userId) {
+        const allProducts = localStorage.getItem(this.userProductsKey);
+        const productsData = allProducts ? JSON.parse(allProducts) : {};
+        return productsData[userId] || [];
+    }
+
+    addUserProduct(userId, product) {
+        const allProducts = localStorage.getItem(this.userProductsKey);
+        const productsData = allProducts ? JSON.parse(allProducts) : {};
+        
+        if (!productsData[userId]) {
+            productsData[userId] = [];
+        }
+
+        const newProduct = {
+            id: Date.now(),
+            ...product,
+            createdAt: new Date().toISOString(),
+            userId: userId
+        };
+
+        productsData[userId].push(newProduct);
+        localStorage.setItem(this.userProductsKey, JSON.stringify(productsData));
+        return newProduct;
+    }
+
+    deleteUserProduct(userId, productId) {
+        const allProducts = localStorage.getItem(this.userProductsKey);
+        const productsData = allProducts ? JSON.parse(allProducts) : {};
+        
+        if (productsData[userId]) {
+            productsData[userId] = productsData[userId].filter(p => p.id !== productId);
+            localStorage.setItem(this.userProductsKey, JSON.stringify(productsData));
+        }
+    }
+
+    getAllProductsByCategory(category) {
+        // Get default products
+        const defaultProducts = products[category] || [];
+        
+        // Get all user products
+        const allProducts = localStorage.getItem(this.userProductsKey);
+        const productsData = allProducts ? JSON.parse(allProducts) : {};
+        
+        // Flatten all user products and filter by category
+        const userProducts = Object.values(productsData)
+            .flat()
+            .filter(p => p.category === category);
+        
+        // Combine and return
+        return [...defaultProducts, ...userProducts];
+    }
 }
 
 // Initialize database
@@ -209,34 +264,19 @@ document.getElementById('login-form').addEventListener('submit', (e) => {
 document.getElementById('forgot-password-form').addEventListener('submit', (e) => {
     e.preventDefault();
     
-    const mobile = document.getElementById('forgot-mobile').value.trim();
-    const newPassword = document.getElementById('forgot-new-password').value;
-    const confirmPassword = document.getElementById('forgot-confirm-password').value;
+    const email = document.getElementById('forgot-email').value.trim();
 
-    if (newPassword !== confirmPassword) {
-        showNotification('Passwords do not match', 'error');
-        return;
-    }
-
-    try {
-        const users = db.getUsers();
-        const userIndex = users.findIndex(u => u.mobile === mobile);
-        
-        if (userIndex === -1) {
-            showNotification('Mobile number not found', 'error');
-            return;
-        }
-
-        // Update password
-        users[userIndex].password = newPassword;
-        db.saveUsers(users);
-        
-        showNotification('Password reset successful! Please login with new password.');
-        document.getElementById('forgot-password-form').reset();
-        showPage('login-page');
-    } catch (error) {
-        showNotification('Error resetting password', 'error');
-    }
+    // In production with Supabase/Firebase, this would send actual email
+    // For demo purposes, show instructions
+    showNotification('⚠️ Email reset requires Supabase/Firebase setup. Check DATABASE_GUIDE.md', 'error');
+    
+    // This is what would happen with Supabase:
+    // supabase.auth.resetPasswordForEmail(email)
+    // User receives email with secure link
+    // Link expires in 1 hour
+    // One-time use only
+    
+    console.log('Password reset requested for:', email);
 });
 
 // Load Home Page
@@ -268,27 +308,34 @@ function loadProducts(category) {
     
     productGrid.innerHTML = '';
     
-    products[category].forEach(product => {
-        const productCard = document.createElement('div');
-        productCard.className = 'product-card';
-        productCard.innerHTML = `
-            <div class="product-icon">${product.icon}</div>
-            <h4>${product.name}</h4>
-            <div class="product-price">₹${product.price}</div>
-            <p>${product.unit}</p>
-            <button class="btn-add" data-id="${product.id}">Add to Cart</button>
-        `;
-        productGrid.appendChild(productCard);
-    });
-
-    // Add event listeners to "Add to Cart" buttons
-    document.querySelectorAll('.btn-add').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const productId = e.target.dataset.id;
-            const product = Object.values(products).flat().find(p => p.id == productId);
-            showNotification(`${product.name} added to cart!`);
+    // Get all products (default + user products)
+    const allProducts = db.getAllProductsByCategory(category);
+    
+    if (allProducts.length === 0) {
+        productGrid.innerHTML = '<p style="text-align:center;color:white;grid-column:1/-1;">No products available in this category.</p>';
+    } else {
+        allProducts.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
+            productCard.innerHTML = `
+                <div class="product-icon">${product.icon}</div>
+                <h4>${product.name}</h4>
+                <div class="product-price">₹${product.price}</div>
+                <p>${product.unit}</p>
+                <button class="btn-add" data-id="${product.id}">Add to Cart</button>
+            `;
+            productGrid.appendChild(productCard);
         });
-    });
+
+        // Add event listeners to "Add to Cart" buttons
+        document.querySelectorAll('.btn-add').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const productId = e.target.dataset.id;
+                const product = allProducts.find(p => p.id == productId);
+                showNotification(`${product.name} added to cart!`);
+            });
+        });
+    }
 
     showPage('product-page');
 }
@@ -334,6 +381,125 @@ document.getElementById('back-btn').addEventListener('click', () => {
     showPage('home-page');
 });
 
+// Add Product Button
+document.getElementById('add-product-btn').addEventListener('click', () => {
+    loadAddProductPage();
+});
+
+// Back to Home Button
+document.getElementById('back-to-home-btn').addEventListener('click', () => {
+    showPage('home-page');
+});
+
+// Add Product Form
+document.getElementById('add-product-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const user = db.getCurrentUser();
+    if (!user) {
+        showNotification('Please login first', 'error');
+        return;
+    }
+
+    // Check product limit (3 products max per user)
+    const userProducts = db.getUserProducts(user.id);
+    if (userProducts.length >= 3) {
+        showNotification('⚠️ Maximum limit reached! You can only add 3 products.', 'error');
+        return;
+    }
+
+    const productData = {
+        name: document.getElementById('product-name').value.trim(),
+        category: document.getElementById('product-category').value,
+        price: parseInt(document.getElementById('product-price').value),
+        unit: document.getElementById('product-unit').value,
+        icon: document.getElementById('product-icon').value.trim()
+    };
+
+    try {
+        db.addUserProduct(user.id, productData);
+        showNotification('✅ Product added successfully!');
+        document.getElementById('add-product-form').reset();
+        loadUserProducts();
+    } catch (error) {
+        showNotification('Error adding product', 'error');
+    }
+});
+
+// Load Add Product Page
+function loadAddProductPage() {
+    const user = db.getCurrentUser();
+    if (!user) {
+        showPage('login-page');
+        return;
+    }
+    
+    showPage('add-product-page');
+    loadUserProducts();
+}
+
+// Load User Products
+function loadUserProducts() {
+    const user = db.getCurrentUser();
+    if (!user) return;
+
+    const userProductsList = document.getElementById('user-products-list');
+    const userProducts = db.getUserProducts(user.id);
+    
+    // Update product count and limit bar
+    const productCount = document.getElementById('product-count');
+    const limitBarFill = document.getElementById('limit-bar-fill');
+    const addProductForm = document.getElementById('add-product-form');
+    
+    productCount.textContent = userProducts.length;
+    limitBarFill.style.width = `${(userProducts.length / 3) * 100}%`;
+    
+    // Disable form if limit reached
+    if (userProducts.length >= 3) {
+        addProductForm.querySelectorAll('input, select, button').forEach(el => {
+            el.disabled = true;
+        });
+        limitBarFill.style.background = 'linear-gradient(90deg, #f44336, #e91e63)';
+        showNotification('⚠️ Product limit reached (3/3). Delete a product to add new ones.', 'error');
+    } else {
+        addProductForm.querySelectorAll('input, select, button').forEach(el => {
+            el.disabled = false;
+        });
+        limitBarFill.style.background = 'linear-gradient(90deg, #667eea, #764ba2)';
+    }
+
+    if (userProducts.length === 0) {
+        userProductsList.innerHTML = '<p style="text-align:center;color:#666;grid-column:1/-1;">No products added yet. Add your first product above!</p>';
+    } else {
+        userProductsList.innerHTML = '';
+        userProducts.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'user-product-card';
+            productCard.innerHTML = `
+                <div class="product-icon">${product.icon}</div>
+                <h4>${product.name}</h4>
+                <div class="product-price">₹${product.price}</div>
+                <p>${product.unit}</p>
+                <p style="font-size:12px;color:#888;">Category: ${product.category}</p>
+                <button class="btn-delete-product" data-id="${product.id}">Delete</button>
+            `;
+            userProductsList.appendChild(productCard);
+        });
+
+        // Add delete button handlers
+        document.querySelectorAll('.btn-delete-product').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const productId = parseInt(e.target.dataset.id);
+                if (confirm('Are you sure you want to delete this product?')) {
+                    db.deleteUserProduct(user.id, productId);
+                    showNotification('✅ Product deleted successfully');
+                    loadUserProducts();
+                }
+            });
+        });
+    }
+}
+
 // Logout Buttons
 document.getElementById('logout-btn').addEventListener('click', () => {
     db.logout();
@@ -342,6 +508,12 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 });
 
 document.getElementById('logout-btn-2').addEventListener('click', () => {
+    db.logout();
+    showNotification('Logged out successfully');
+    showPage('landing-page');
+});
+
+document.getElementById('logout-btn-3').addEventListener('click', () => {
     db.logout();
     showNotification('Logged out successfully');
     showPage('landing-page');
